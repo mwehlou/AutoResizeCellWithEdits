@@ -11,27 +11,27 @@ import Foundation
 class ItemStore {
     var items = [Item]()
     
-    func appendItem(text: String) -> Item {
+    func appendItem(_ text: String) -> Item {
         let item = Item(text: text)
         items.append(item)
         return item
     }
     
-    func removeItem(item: Item) {
-        if let index = items.indexOf({currentItem -> Bool in
+    func removeItem(_ item: Item) {
+        if let index = items.index(where: {currentItem -> Bool in
             return item === currentItem
         }) {
-            items.removeAtIndex(index)
+            items.remove(at: index)
         }
     }
     
-    func moveItemAtIndex(fromIndex: Int, toIndex: Int) {
+    func moveItemAtIndex(_ fromIndex: Int, toIndex: Int) {
         if fromIndex == toIndex {
             return
         }
         
         let movedItem = items[fromIndex]
-        items.removeAtIndex(fromIndex)
-        items.insert(movedItem, atIndex: toIndex)
+        items.remove(at: fromIndex)
+        items.insert(movedItem, at: toIndex)
     }
 }

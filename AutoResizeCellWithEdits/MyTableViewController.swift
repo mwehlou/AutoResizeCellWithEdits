@@ -23,7 +23,7 @@ class MyTableViewController: UITableViewController, RefreshableController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let statusbarHeight = UIApplication.sharedApplication().statusBarFrame.height
+        let statusbarHeight = UIApplication.shared.statusBarFrame.height
         let inset = UIEdgeInsets(top: statusbarHeight, left: 0, bottom: 0, right: 0)
         tableView.contentInset = inset
         tableView.scrollIndicatorInsets = inset
@@ -34,7 +34,7 @@ class MyTableViewController: UITableViewController, RefreshableController {
 
     // MARK: - Refresh table management
     
-    var runningTimer: NSTimer? = nil
+    var runningTimer: Timer? = nil
     
     func refresh() {
         if let timer = runningTimer {
@@ -43,12 +43,12 @@ class MyTableViewController: UITableViewController, RefreshableController {
         runningTimer = startTimer()
     }
     
-    private func startTimer() -> NSTimer {
+    private func startTimer() -> Timer {
         NSLog("starting timer")
-        return NSTimer.scheduledTimerWithTimeInterval(0.25, target: self, selector: #selector(MyTableViewController.DoTheRefresh), userInfo: nil, repeats: false)
+        return Timer.scheduledTimer(timeInterval: 0.25, target: self, selector: #selector(MyTableViewController.DoTheRefresh), userInfo: nil, repeats: false)
     }
     
-    private func stopTimer(timer: NSTimer) {
+    private func stopTimer(_ timer: Timer) {
         if let timer = runningTimer {
             NSLog("stopping timer")
             timer.invalidate()
@@ -56,7 +56,7 @@ class MyTableViewController: UITableViewController, RefreshableController {
         }
     }
     
-    func DoTheRefresh(timer: NSTimer) {
+    func DoTheRefresh(_ timer: Timer) {
         NSLog("fired timer for refresh")
         stopTimer(timer)
         tableView.beginUpdates()
@@ -66,63 +66,63 @@ class MyTableViewController: UITableViewController, RefreshableController {
     
     // MARK: - Actions
     
-    @IBAction func addNewItem(sender: AnyObject) {
+    @IBAction func addNewItem(_ sender: AnyObject) {
         let newItem = store.appendItem("New text")
         
-        if let index = store.items.indexOf({ (item) -> Bool in
+        if let index = store.items.index(where: { (item) -> Bool in
             return item === newItem
         }) {
-            let indexPath = NSIndexPath(forRow: index, inSection: 0)
-            tableView.insertRowsAtIndexPaths([indexPath], withRowAnimation: .Automatic)
+            let indexPath = IndexPath(row: index, section: 0)
+            tableView.insertRows(at: [indexPath], with: .automatic)
             updateVisibleCells()
         }
     }
     
-    @IBAction func toggleEditingMode(sender: AnyObject) {
-        if editing {
-            sender.setTitle("Edit", forState: .Normal)
+    @IBAction func toggleEditingMode(_ sender: AnyObject) {
+        if isEditing {
+            sender.setTitle("Edit", for: UIControlState())
             setEditing(false, animated: true)
         }
         else {
-            sender.setTitle("Done", forState: .Normal)
+            sender.setTitle("Done", for: UIControlState())
             setEditing(true, animated: true)
         }
     }
     
-    @IBAction func backgroundTapped(sender: UITapGestureRecognizer) {
+    @IBAction func backgroundTapped(_ sender: UITapGestureRecognizer) {
         view.endEditing(true)
     }
     
     // MARK: - UITableViewDataSource
     
-    override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return store.items.count
     }
     
-    override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCellWithIdentifier("ItemCell") as! ItemTableCell
-        let item = store.items[indexPath.row]
+    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "ItemCell") as! ItemTableCell
+        let item = store.items[(indexPath as NSIndexPath).row]
         cell.controller = self
         cell.tableView = tableView
         cell.item = item
         return cell
     }
     
-    override func tableView(tableView: UITableView, commitEditingStyle editingStyle: UITableViewCellEditingStyle, forRowAtIndexPath indexPath: NSIndexPath) {
-        if editingStyle == .Delete {
-            let item = store.items[indexPath.row]
+    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
+        if editingStyle == .delete {
+            let item = store.items[(indexPath as NSIndexPath).row]
             store.removeItem(item)
-            tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: .Automatic)
+            tableView.deleteRows(at: [indexPath], with: .automatic)
         }
     }
 
-    override func tableView(tableView: UITableView, moveRowAtIndexPath sourceIndexPath: NSIndexPath, toIndexPath destinationIndexPath: NSIndexPath) {
-        store.moveItemAtIndex(sourceIndexPath.row, toIndex: destinationIndexPath.row)
+    override func tableView(_ tableView: UITableView, moveRowAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
+        store.moveItemAtIndex((sourceIndexPath as NSIndexPath).row, toIndex: (destinationIndexPath as NSIndexPath).row)
     }
     
     // MARK: - View functions
     
-    override func viewWillAppear(animated: Bool) {
+    override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         NSLog("MTVC viewWillAppear")
     }
@@ -132,12 +132,12 @@ class MyTableViewController: UITableViewController, RefreshableController {
     // the height constraint.
     // same goes for after device rotations
     
-    override func viewDidAppear(animated: Bool) {
+    override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         updateVisibleCells()
     }
     
-    override func didRotateFromInterfaceOrientation(fromInterfaceOrientation: UIInterfaceOrientation) {
+    override func didRotate(from fromInterfaceOrientation: UIInterfaceOrientation) {
         updateVisibleCells()
         // after rotation, the cursor has a tendency to keep indicating editing
         // even though the current view doesn't respond to typing

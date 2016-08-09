@@ -9,19 +9,27 @@
 import UIKit
 
 extension String {
-    func rangeFromNSRange(nsRange: NSRange) -> Range<String.Index>? {
-        let from16 = utf16.startIndex.advancedBy(nsRange.location, limit: utf16.endIndex)
-        let to16 = from16.advancedBy(nsRange.length, limit: utf16.endIndex)
-        if let from = String.Index(from16, within: self), to = String.Index(to16, within: self) {
-            return from ..< to
+    func rangeFromNSRange(_ nsRange: NSRange) -> Range<String.Index>? {
+        
+        guard
+            let from16 = utf16.index(utf16.startIndex, offsetBy: nsRange.location, limitedBy: utf16.endIndex),
+            let to16 = utf16.index(from16, offsetBy: nsRange.length, limitedBy: utf16.endIndex),
+            let from = String.Index(from16, within: self),
+            let to = String.Index(to16, within: self)
+        else {
+            return nil
         }
-        return nil
+        return from ..< to
     }
     
-    func NSRangeFromRange(range: Range<String.Index>) -> NSRange {
-        let from = String.UTF16View.Index(range.startIndex, within: utf16)
-        let to = String.UTF16View.Index(range.endIndex, within: utf16)
-        return NSMakeRange(utf16.startIndex.distanceTo(from), from.distanceTo(to))
+    func NSRangeFromRange(_ range: Range<String.Index>) -> NSRange {
+        let utf16view = self.utf16
+        let from = range.lowerBound.samePosition(in: utf16view)
+        let to = range.upperBound.samePosition(in: utf16view)
+        let distanceToFrom = utf16view.distance(from: utf16view.startIndex, to: from)
+        let distanceBetweenFromAndTo = utf16view.distance(from: from, to: to)
+        let nsRange = NSMakeRange(distanceToFrom, distanceBetweenFromAndTo)
+        return nsRange
     }
     
 }

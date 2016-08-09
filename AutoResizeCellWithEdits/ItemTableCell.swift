@@ -45,7 +45,7 @@ class ItemTableCell: UITableViewCell, UITextViewDelegate {
     // MARK: - Text view delegate
     
     
-    func textView(textView: UITextView, shouldChangeTextInRange range: NSRange, replacementText text: String) -> Bool {
+    func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
     
         // this delegate function doesn't seem to get triggered by forward delete, only regular backward delete
         // OTOH, there is no forward delete on iPhones, so maybe it doesn't matter?
@@ -56,11 +56,14 @@ class ItemTableCell: UITableViewCell, UITextViewDelegate {
         
         makeCursorPositionVisible()
         
+        item?.text = newText
+        
         return true
     }
     
+    
 
-    func textViewShouldBeginEditing(textView: UITextView) -> Bool {
+    func textViewShouldBeginEditing(_ textView: UITextView) -> Bool {
         addDoneButtonToKeyboard(textView)
         return true
     }
@@ -68,36 +71,37 @@ class ItemTableCell: UITableViewCell, UITextViewDelegate {
     // MARK: - Done button
 
     
-    func addDoneButtonToKeyboard(textView: UITextView) {
-        let doneToolbar = UIToolbar(frame: CGRectMake(0, 0, 320, 50))
-        doneToolbar.barStyle = .BlackTranslucent
-        let space = UIBarButtonItem(barButtonSystemItem: .FlexibleSpace, target: nil, action: nil)
-        let doneButtonItem = UIBarButtonItem(title: "Done", style: .Done, target: self, action: #selector(ItemTableCell.doneButtonPressed))
+    func addDoneButtonToKeyboard(_ textView: UITextView) {
+        let doneToolbar = UIToolbar(frame: CGRect(x: 0, y: 0, width: 320, height: 50))
+        doneToolbar.barStyle = .blackTranslucent
+        let space = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
+        let doneButtonItem = UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(ItemTableCell.doneButtonPressed))
         doneToolbar.setItems([space, doneButtonItem], animated: false)
         doneToolbar.sizeToFit()
         textView.inputAccessoryView = doneToolbar
         NSLog("added done")
     }
     
-    func doneButtonPressed(sender: UIBarButtonItem) {
+    func doneButtonPressed(_ sender: UIBarButtonItem) {
         textView.resignFirstResponder()
     }
     
     // MARK: - Overrides
     
-    override func didTransitionToState(state: UITableViewCellStateMask) {
-        super.didTransitionToState(state)
+    override func didTransition(to state: UITableViewCellStateMask) {
+        super.didTransition(to: state)
         updateTextViewSize()
     }
     
     // MARK: - Helper functions
     
-    private func buildChangedText(oldText: String, range nsRange: NSRange, replacementText: String) -> String {
+    private func buildChangedText(_ oldText: String, range nsRange: NSRange, replacementText: String) -> String {
         
         guard let range = oldText.rangeFromNSRange(nsRange) else {
             return oldText
         }
-        let newText = oldText.stringByReplacingCharactersInRange(range, withString: replacementText)
+        let newText = oldText.replacingCharacters(in: range, with: replacementText)
+        
         return newText
     }
     
@@ -109,8 +113,8 @@ class ItemTableCell: UITableViewCell, UITextViewDelegate {
     private func makeCursorPositionVisible() {
         if let textRange = textView.selectedTextRange {
             let textPosition = textRange.end
-            let caretRect = textView.caretRectForPosition(textPosition)
-            if let caretRectInTableView = tableView?.convertRect(caretRect, fromView: textView) {
+            let caretRect = textView.caretRect(for: textPosition)
+            if let caretRectInTableView = tableView?.convert(caretRect, from: textView) {
                 let adjustedRect = CGRect(x: caretRectInTableView.minX, y: caretRectInTableView.minY, width: caretRectInTableView.width, height: caretRectInTableView.height + tableView!.contentInset.top)
                 NSLog("top inset: \(tableView!.contentInset.top)")
                 // the scroll actually looks better to me without animation,
@@ -121,7 +125,7 @@ class ItemTableCell: UITableViewCell, UITextViewDelegate {
         }
     }
     
-    private func calculateHeightOfTextView(textView: UITextView, forText text: String) -> CGFloat {
+    private func calculateHeightOfTextView(_ textView: UITextView, forText text: String) -> CGFloat {
         
         // if we fail, simply return the old height instead
         guard let font = textView.font else {
@@ -129,11 +133,11 @@ class ItemTableCell: UITableViewCell, UITextViewDelegate {
         }
         
         let attributes = [NSFontAttributeName: font]
-        let options: NSStringDrawingOptions = [.UsesFontLeading, .UsesLineFragmentOrigin]
+        let options: NSStringDrawingOptions = [.usesFontLeading, .usesLineFragmentOrigin]
         let lineLength = getLineLengthOfTextView(textView)
-        let startSize = CGSize(width: lineLength, height: CGFloat.max)
+        let startSize = CGSize(width: lineLength, height: CGFloat.greatestFiniteMagnitude)
         
-        let newRect = text.boundingRectWithSize(startSize,
+        let newRect = text.boundingRect(with: startSize,
                                                 options: options,
                                                 attributes: attributes,
                                                 context: nil)
@@ -144,7 +148,7 @@ class ItemTableCell: UITableViewCell, UITextViewDelegate {
         return newHeight
     }
     
-    private func getLineLengthOfTextView(textView: UITextView) -> CGFloat {
+    private func getLineLengthOfTextView(_ textView: UITextView) -> CGFloat {
         
         let width = textView.contentSize.width
         let padding = textView.textContainer.lineFragmentPadding
@@ -153,7 +157,7 @@ class ItemTableCell: UITableViewCell, UITextViewDelegate {
         return lineLength
     }
     
-    private func updateConstraintIfNeeded(newHeight: CGFloat) {
+    private func updateConstraintIfNeeded(_ newHeight: CGFloat) {
         
         if (oldHeight != newHeight) {
             oldHeight = newHeight
